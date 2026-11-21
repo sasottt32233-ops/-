@@ -1,0 +1,70 @@
+/** Upgrade module: finance / knowledge hub / decisions, health check, Drive backups. All additive. */
+var REC_OK_ = ['Finance', 'Notes', 'Decisions'];
+function saveRec(n, o) {
+  assertOwner_(); if (REC_OK_.indexOf(n) < 0) throw new Error('جدول غير مسموح'); o = o || {};
+  if (n === 'Finance') {
+    var a = Number(o.amount);
+    if (o.id && o.amount === undefined) { /* partial update */ }
+    else if (!(a > 0) || ['income', 'expense'].indexOf(o.type) < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(o.date || '')) throw new Error('بيانات مالية غير صالحة');
+    if (o.amount !== undefined) o.amount = String(a);
+  } else if (!o.id && !o.title) throw new Error('العنوان مطلوب');
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var upd = !!o.id; if (upd) update_(n, o.id, o); else { if (n === 'Notes') o.created = now_(); o = append_(n, o); }
+    audit_((upd ? 'update ' : 'create ') + n, o.id);
+  } finally { lock.releaseLock(); }
+  return o.id;
+}
+function deleteRec(n, id) { assertOwner_(); if (REC_OK_.indexOf(n) < 0) throw new Error('جدول غير مسموح'); delete_(n, id); audit_('delete ' + n, id); }
+function convertNote(id, to) {
+  assertOwner_(); var n = read_('Notes').filter(function (x) { return x.id === id; })[0]; if (!n) throw new Error('العنصر غير موجود');
+  if (to === 'task') append_('Tasks', base_(n.title, n.projectId || '', today_(), 'med', ''));
+  else if (to === 'project') append_('Projects', { name: n.title, desc: n.body || '', start: today_(), target: '', priority: 'med', status: 'active', created: now_() });
+  else throw new Error('تحويل غير معروف');
+  update_('Notes', id, { tags: (n.tags ? n.tags + ',' : '') + 'حُوِّلت' }); audit_('convertNote ' + to, id);
+}
+function healthCheck() {
+  assertOwner_(); var s = ss_(), miss = [], cnt = {};
+  Object.keys(SCHEMA).forEach(function (n) { var sh = s.getSheetByName(n); if (!sh) miss.push(n); else cnt[n] = Math.max(0, sh.getLastRow() - 1); });
+  var P = {}, Tid = {}; read_('Projects').forEach(function (p) { P[p.id] = 1; }); var T = read_('Tasks'); T.forEach(function (t) { Tid[t.id] = 1; });
+  var dup = {}, d = 0; T.forEach(function (t) { if (t.repeatOf) { var k = t.repeatOf + '|' + t.origDue; if (dup[k]) d++; dup[k] = 1; } });
+  var au = read_('AuditLog'), lb = au.filter(function (a) { return /Backup/.test(a.action); }).pop();
+  return { missing: miss, counts: cnt, apiMode: API_OK_,
+    orphans: { tasksNoProject: T.filter(function (t) { return t.projectId && !P[t.projectId]; }).length, subtasksNoParent: T.filter(function (t) { return t.parentId && !Tid[t.parentId]; }).length },
+    dupInstances: d, triggers: ScriptApp.getProjectTriggers().map(function (t) { return { fn: t.getHandlerFunction(), type: String(t.getEventType()) }; }),
+    audit: au.slice(-15).reverse(), lastBackup: lb ? lb.at + ' (' + lb.action + ')' : '' };
+}
+function removeTriggers(fn) {
+  assertOwner_(); if (['rollover', 'dailySummary'].indexOf(fn) < 0) throw new Error('غير مسموح');
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === fn) ScriptApp.deleteTrigger(t); }); audit_('removeTriggers', fn);
+}
+function bkFolder_() { var it = DriveApp.getFoldersByName('ENJAZ Backups'); return it.hasNext() ? it.next() : DriveApp.createFolder('ENJAZ Backups'); }
+/** Manual full backup = a copy of the database spreadsheet in Drive folder "ENJAZ Backups". */
+function createDriveBackup() {
+  assertOwner_();
+  var f = DriveApp.getFileById(ss_().getId()).makeCopy('ENJAZ-backup-' + Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd_HH-mm-ss'), bkFolder_());
+  audit_('createDriveBackup', f.getId()); return { id: f.getId(), name: f.getName() };
+}
+function listDriveBackups() {
+  assertOwner_(); var out = [], it = bkFolder_().getFiles();
+  while (it.hasNext()) { var f = it.next(); out.push({ id: f.getId(), name: f.getName(), at: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd HH:mm') }); }
+  return out.sort(function (a, b) { return a.at < b.at ? 1 : -1; });
+}
+/** Restore user-data sheets from a Drive backup. Validates first; saves the current state as a new backup before overwriting. */
+function restoreDriveBackup(id, phrase) {
+  assertOwner_(); if (phrase !== 'RESTORE') throw new Error('عبارة التأكيد غير صحيحة');
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var src = SpreadsheetApp.openById(id), snap = {}, optional = ['Content', 'Finance', 'Notes', 'Decisions'];
+    USER_SHEETS.forEach(function (n) {
+      var sh = src.getSheetByName(n);
+      if (!sh) { if (optional.indexOf(n) < 0) throw new Error('نسخة غير صالحة: ينقصها ' + n); snap[n] = []; return; }
+      var v = sh.getDataRange().getDisplayValues(), h = v[0];
+      snap[n] = v.slice(1).filter(function (r) { return r[0] !== ''; }).map(function (r) { return SCHEMA[n].map(function (k) { var i = h.indexOf(k); return i < 0 ? '' : r[i]; }); });
+    });
+    createDriveBackup();
+    USER_SHEETS.forEach(function (n) { clear_(n); var rows = snap[n]; if (rows.length) sheet_(n).getRange(2, 1, rows.length, SCHEMA[n].length).setValues(rows); });
+    var ok = USER_SHEETS.every(function (n) { return read_(n).length === snap[n].length; });
+    audit_('restoreDriveBackup', id + (ok ? ' ok' : ' VERIFY FAILED')); return { ok: ok };
+  } finally { lock.releaseLock(); }
+}
