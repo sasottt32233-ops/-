@@ -492,3 +492,18 @@ V.health=function(){setTimeout(hFill,0);return'<div class="card" id="hb">جار�
 var _vc11=V.cmd;V.cmd=function(){return _vc11()+'<div class="card"><h3>إجراءات سريعة</h3><button class="b" onclick="editTask()">+ مهمة</button> <button class="b" onclick="editProj()">+ مشروع</button> <button class="b" onclick="editNote(null,\'idea\')">+ فكرة</button> <button class="b" onclick="editFin(\'expense\')">+ مصروف</button> <button class="b" onclick="editDec()">+ قرار</button></div>'};
 if(S){theme();render()}
 </script></body></html>
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENJAZ</title>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
+</head>
+<body>
+  <iframe src="https://script.google.com/macros/s/AKfycbw7LXBhfAuoJj7Mz9RQDoaHtfQNpwJN-vSg6qvLrpeNE1eu3rLYD0FyjAiZp-0JeW5W/exec"></iframe>
+</body>
+
