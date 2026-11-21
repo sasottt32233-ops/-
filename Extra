@@ -1,0 +1,36 @@
+function saveContent(c) {
+  assertOwner_(); if (!c.projectId) throw new Error('اختر المشروع');
+  if (c.id) update_('Content', c.id, c);
+  else append_('Content', { projectId: c.projectId, date: c.date || today_(), type: c.type || 'post', planned: c.planned || '0', published: c.published || '0', url: c.url || '', status: c.status || 'published', notes: c.notes || '' });
+}
+function deleteContent(id) { assertOwner_(); delete_('Content', id); }
+
+/** Restores a backup. Ids are preserved, so no duplicates / no double points. Current state is backed up first. */
+function restoreBackup(id) {
+  assertOwner_(); var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var b = read_('Backups').filter(function (x) { return x.id === id; })[0]; if (!b) throw new Error('النسخة غير موجودة');
+    var snap; try { snap = JSON.parse(b.json); } catch (e) { throw new Error('النسخة تالفة'); }
+    if (!Array.isArray(snap.Projects) || !Array.isArray(snap.Tasks) || !Array.isArray(snap.Achievements)) throw new Error('بنية النسخة غير صالحة');
+    createBackup();
+    USER_SHEETS.forEach(function (n) { clear_(n); (snap[n] || []).forEach(function (r) { append_(n, r); }); });
+    (snap.Settings || []).forEach(function (r) { if (!update_('Settings', r.key, { value: r.value })) append_('Settings', r); });
+    audit_('restoreBackup', id);
+  } finally { lock.releaseLock(); }
+}
+
+/** Daily email summary (no push notifications — email only). */
+function dailySummary() {
+  var td = today_(), T = read_('Tasks').filter(function (t) { return ['Completed', 'Cancelled', 'Deferred', 'Recurring'].indexOf(t.status) < 0 && t.curDue <= td; });
+  var done = read_('Achievements').filter(function (a) { return a.doneDate === td; }).length;
+  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'ENJAZ — ملخص ' + td,
+    'المتبقي اليوم: ' + T.length + '\nالمنجز اليوم: ' + done + '\n' + T.slice(0, 15).map(function (t) { return '- ' + t.title; }).join('\n'));
+}
+function enableDailyEmail(hour) {
+  assertOwner_();
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'dailySummary') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('dailySummary').timeBased().atHour(Number(hour) || 20).everyDays(1).inTimezone(TZ).create();
+}
+function disableDailyEmail() {
+  assertOwner_(); ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'dailySummary') ScriptApp.deleteTrigger(t); });
+} 
