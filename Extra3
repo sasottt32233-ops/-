@@ -1,0 +1,76 @@
+/** Images (teacher / background) are stored as 45k-char chunks in Settings. */
+function saveImage(n, d) {
+  assertOwner_();
+  if (['teacher', 'bg', 'logo'].indexOf(n) < 0 || !/^data:image\/(jpeg|png);base64,/.test(d)) throw new Error('صورة غير صالحة');
+  if (d.length > 135000) throw new Error('الصورة كبيرة، جرّب صورة أصغر');
+  removeImage(n); var c = 0;
+  for (var i = 0; i < d.length; i += 45000) { append_('Settings', { key: 'img_' + n + '_' + c, value: d.slice(i, i + 45000) }); c++; }
+  append_('Settings', { key: 'img_' + n + '_n', value: String(c) });
+}
+function removeImage(n) { assertOwner_(); clearKeys_(new RegExp('^img_' + n + '_')); }
+function clearKeys_(re) { read_('Settings').forEach(function (r) { if (re.test(r.key)) delete_('Settings', r.key); }); }
+
+/** Kanban moves. Completed tasks never move back (protects points). */
+function setStatus(id, s) {
+  assertOwner_();
+  var t = read_('Tasks').filter(function (x) { return x.id === id; })[0];
+  if (!t || t.status === 'Completed') return;
+  if (s === 'Completed') return completeTask(id);
+  update_('Tasks', id, { status: s });
+}
+function base_(title, pid, d, pr, par) {
+  return { title: title, desc: '', projectId: pid, category: 'تعليمي', priority: pr, created: now_(), startDate: d, origDue: d, curDue: d, estMin: '30', pct: '0', status: 'New', notes: '', resched: '0', parentId: par, startTime: '' };
+}
+/** A lesson = parent task + 7 production-stage subtasks. */
+function addLesson(pid, title, due) {
+  assertOwner_(); if (!title) throw new Error('عنوان الدرس مطلوب');
+  var d = due || today_(), p = append_('Tasks', base_(title, pid, d, 'high', ''));
+  ['اختيار الدرس', 'كتابة سيناريو الدرس', 'إعداد ورقة العمل', 'تسجيل الفيديو', 'مونتاج الفيديو', 'مراجعة الدرس', 'نشر الدرس']
+    .forEach(function (s) { append_('Tasks', base_(s + ' — ' + title, pid, d, 'med', p.id)); });
+}
+
+/** Weekly recurring tasks: a template (status Recurring, repeat="0,2" = Sun,Tue) spawns one instance per matching day for the next 14 days. Deduped by repeatOf+date. */
+function genRec_() {
+  var T = read_('Tasks'), have = {};
+  T.forEach(function (t) { if (t.repeatOf) have[t.repeatOf + '|' + t.origDue] = 1; });
+  T.filter(function (t) { return t.status === 'Recurring' && t.repeat; }).forEach(function (t) {
+    var days = t.repeat.split(',');
+    for (var i = 0; i < 14; i++) {
+      var ms = Date.now() + i * 864e5, d = Utilities.formatDate(new Date(ms), TZ, 'yyyy-MM-dd'), w = String(Number(Utilities.formatDate(new Date(ms), TZ, 'u')) % 7);
+      if (days.indexOf(w) > -1 && !have[t.id + '|' + d]) {
+        var o = base_(t.title, t.projectId, d, t.priority, ''); o.category = t.category; o.desc = t.desc; o.estMin = t.estMin; o.startTime = t.startTime; o.custom = t.custom; o.repeatOf = t.id;
+        append_('Tasks', o); have[t.id + '|' + d] = 1;
+      }
+    }
+  });
+}
+
+/** Manual add / edit / delete of achievement records (points are always summed from this sheet). */
+function saveAch(a) {
+  assertOwner_(); if (!a.title) throw new Error('العنوان مطلوب');
+  var pts = Math.max(0, Number(a.points) || 0), mins = Math.max(0, Number(a.minutes) || 0);
+  if (a.id) update_('Achievements', a.id, { title: a.title, projectId: a.projectId || '', doneDate: a.doneDate || today_(), minutes: String(mins), points: String(pts), priority: a.priority || 'med', notes: a.notes || '' });
+  else append_('Achievements', { taskId: '', title: a.title, projectId: a.projectId || '', doneDate: a.doneDate || today_(), minutes: String(mins), points: String(pts), priority: a.priority || 'med', notes: a.notes || '' });
+}
+function deleteAch(id) { assertOwner_(); delete_('Achievements', id); }
+
+/** Fixed appointments become daily tasks (next 7 days) that show in the Command Center. Deduped by repeatOf="fx:<id>" + date. */
+function genFixed_() {
+  var T = read_('Tasks'), have = {};
+  T.forEach(function (t) { if (t.repeatOf) have[t.repeatOf + '|' + t.origDue] = 1; });
+  read_('FixedSchedule').forEach(function (f) {
+    var days = f.days.split(','), s = f.start.split(':'), e = f.end.split(':'), dur = (Number(e[0]) * 60 + Number(e[1])) - (Number(s[0]) * 60 + Number(s[1]));
+    for (var i = 0; i < 7; i++) {
+      var ms = Date.now() + i * 864e5, d = Utilities.formatDate(new Date(ms), TZ, 'yyyy-MM-dd'), w = String(Number(Utilities.formatDate(new Date(ms), TZ, 'u')) % 7), k = 'fx:' + f.id;
+      if (days.indexOf(w) > -1 && !have[k + '|' + d]) {
+        var o = base_(f.title, f.projectId || '', d, 'low', ''); o.category = 'موعد ثابت'; o.estMin = String(Math.max(1, dur)); o.startTime = f.start; o.repeatOf = k;
+        append_('Tasks', o); have[k + '|' + d] = 1;
+      }
+    }
+  });
+}
+/** Remove not-yet-completed future instances (id=null => all fixed appointments). Completed history is kept. */
+function purgeFx_(id) {
+  var td = today_(), pre = id ? 'fx:' + id : 'fx:';
+  read_('Tasks').forEach(function (t) { if (String(t.repeatOf).indexOf(pre) === 0 && t.status !== 'Completed' && t.curDue >= td) delete_('Tasks', t.id); });
+}
