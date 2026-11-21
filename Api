@@ -1,0 +1,32 @@
+/** JSON API so the static page on GitHub Pages can talk to this script.
+ *  Deploy: Web app -> Execute as: Me -> Who has access: Anyone. Access is protected by a secret token (Script Properties). */
+var API_FNS_ = ['getState', 'saveProject', 'deleteProject', 'saveTask', 'deleteTask', 'startTask', 'setProgress', 'completeTask', 'saveSettings', 'saveFixed', 'deleteFixed',
+  'restoreDefaultUI', 'restoreDefaultSchedule', 'createBackup', 'resetAllData', 'saveContent', 'deleteContent', 'restoreBackup', 'enableDailyEmail', 'disableDailyEmail',
+  'saveImage', 'removeImage', 'setStatus', 'addLesson', 'saveAch', 'deleteAch',
+  'saveRec', 'deleteRec', 'convertNote', 'healthCheck', 'removeTriggers', 'createDriveBackup', 'listDriveBackups', 'restoreDriveBackup'];
+
+/** Run ONCE from the editor, then copy the token from View > Logs. Run again to rotate (old token stops working). */
+function createApiToken() {
+  var t = (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('API_TOKEN', t);
+  Logger.log('ENJAZ API TOKEN: ' + t);
+  return t;
+}
+function safeEq_(a, b) {
+  a = String(a || ''); b = String(b || ''); var r = a.length ^ b.length;
+  for (var i = 0; i < Math.min(a.length, b.length); i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+function doPost(e) {
+  var out;
+  try {
+    var req = JSON.parse(e.postData.contents), tok = PropertiesService.getScriptProperties().getProperty('API_TOKEN');
+    if (!tok || !safeEq_(req.token, tok)) { Utilities.sleep(800); throw new Error('Unauthorized'); }
+    if (API_FNS_.indexOf(req.fn) < 0 || typeof this[req.fn] !== 'function') throw new Error('Unknown function');
+    API_OK_ = true;
+    if (!PropertiesService.getScriptProperties().getProperty('DB_ID')) setup();
+    var r = this[req.fn].apply(null, req.args || []);
+    out = { ok: true, data: r === undefined ? null : r };
+  } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }
+  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
