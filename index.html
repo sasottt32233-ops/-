@@ -114,7 +114,10 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px;text-
 const $=id=>document.getElementById(id);let D=null,busy=false;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let KEY='';try{KEY=localStorage.getItem('pc_key')||'';}catch(e){}
-async function api(fn,...a){let r;try{r=await fetch(window.API_URL,{method:'POST',body:JSON.stringify({key:KEY,fn:fn,args:a})});}catch(e){throw new Error('تعذر الاتصال بالإنترنت أو بالخادم');}
+async function api(fn,...a){const U=window.API_URL||'';
+ if(!U||/PASTE/.test(U))throw new Error('لم يُوضع رابط النشر في ملف config.js بعد');
+ if(!/^https:\/\/script\.google\.com\/(a\/macros\/[^\/]+\/|macros\/)s\/[^\/]+\/exec$/.test(U))throw new Error('الرابط في config.js غير صحيح: لازم يبدأ بـ https://script.google.com/macros/s/ وينتهي بـ /exec (وليس /dev)');
+ let r;try{r=await fetch(U,{method:'POST',body:JSON.stringify({key:KEY,fn:fn,args:a})});}catch(e){throw new Error('الخادم رفض الطلب. غالباً النشر ليس "Anyone" أو لم تنشر New version. جرّب فتح رابط /exec في المتصفح');}
  let j;try{j=await r.json();}catch(e){throw new Error('رد غير صالح من الخادم. تأكد من رابط النشر في config.js ومن نشر نسخة جديدة');}
  if(!j.ok){if(/مفتاح|مصرح/.test(j.error||'')){$('lock').hidden=false;}throw new Error(j.error||'خطأ');}return j.data;}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500);}
