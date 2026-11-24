@@ -1,1 +1,62 @@
-{"name":"عداد النشر","short_name":"عداد النشر","description":"إدارة النشر بذكاء","lang":"ar","dir":"rtl","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"#101D35","theme_color":"#101D35","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+ "id": "/",
+ "name": "عداد النشر",
+ "short_name": "عداد النشر",
+ "description": "إدارة النشر بذكاء",
+ "lang": "ar",
+ "dir": "rtl",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#101D35",
+ "theme_color": "#101D35",
+ "categories": [
+  "productivity",
+  "business"
+ ],
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "مهام اليوم",
+   "short_name": "المهام",
+   "url": "./?go=today",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "الصفحات",
+   "short_name": "الصفحات",
+   "url": "./?go=pages",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  }
+ ]
+}
