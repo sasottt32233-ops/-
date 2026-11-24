@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101D35"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#101D35"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="عداد النشر"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="config.js"></script><title>عداد النشر</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -281,6 +281,7 @@ window.addEventListener('error',e=>{const b=$('err');b.hidden=false;b.textConten
 async function boot(){try{await load();}catch(e){if(!D){const b=$('err');b.hidden=false;b.innerHTML='<b>تعذر تحميل البيانات</b><br><small>'+esc(e.message||String(e))+'</small><br><br><button id="rt">إعادة المحاولة</button>';$('rt').onclick=boot;}else toast('تعذر التحديث');}}
 try{const c=JSON.parse(localStorage.getItem('pc_cache')||'null');if(c&&c.today===iso(new Date())){D=c;render();}}catch(e){D=null;}
 boot();
+try{const q=new URLSearchParams(location.search).get('go');if(q&&document.querySelector('[data-go="'+q+'"]'))go(q);}catch(e){}
 $('kGo').onclick=()=>{KEY=$('kIn').value;try{localStorage.setItem('pc_key',KEY);}catch(e){}$('lock').hidden=true;boot();};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
