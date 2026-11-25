@@ -49,6 +49,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px;text-
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 .tk .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.tk .chip{white-space:nowrap;flex:none}.go2.w{width:100%}
 #bell{position:relative;background:#ffffff22;height:42px;border-radius:21px;padding:0 16px;font-size:14px}#bn{position:absolute;top:-4px;left:-4px;background:var(--bad);color:#fff;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+.pimg{width:42px;height:42px;border-radius:12px;object-fit:cover;flex:none;background:var(--bg);display:grid;place-items:center;font-size:19px;font-weight:800;color:var(--gold)}
+.bulk{position:sticky;top:0;z-index:5;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--card);padding:8px;border-radius:14px;box-shadow:var(--sh);margin-bottom:8px;border:1px solid var(--gold)}.bulk button.s{margin:0}
+input[type=checkbox]{width:20px;height:20px;margin:0;accent-color:var(--gold);flex:none}
 </style></head><body>
 <nav id="side"><b style="color:var(--gold);font-size:20px;padding:6px 12px 14px">عداد النشر</b><button data-go="home"><span>🏠</span>الرئيسية</button><button data-go="today"><span>✅</span>مهام اليوم</button><button data-go="pages"><span>📄</span>الصفحات</button><button data-go="hist"><span>🕘</span>السجل</button><button data-go="cal"><span>🗓️</span>التقويم</button><button data-go="ana"><span>📊</span>التحليلات</button><button data-go="badges"><span>🏅</span>الشارات</button><button data-go="rep"><span>🧾</span>التقارير</button><button data-go="set"><span>⚙️</span>الإعدادات</button><button data-go="data"><span>💾</span>النسخ والبيانات</button></nav>
 <div class="wrap"><div class="top"><div class="brand"><div><h1>عداد النشر</h1><small>POST COUNTER · إدارة النشر بذكاء</small></div><div style="display:flex;gap:8px"><button id="bell">تنبيهات<b id="bn" hidden>0</b></button><button id="thm" title="الوضع الفاتح/الداكن">🌙</button></div></div>
@@ -67,21 +70,25 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px;text-
 
 
 <section data-t="pages" class="card"><h2>إضافة صفحة</h2><input id="nName" placeholder="اسم الصفحة"><input id="nUrl" placeholder="رابط فيسبوك" dir="ltr">
-<input id="nDaily" type="number" min="0" placeholder="الهدف اليومي (3)"><button id="addP">إضافة</button></section>
+<input id="nDaily" type="number" min="0" placeholder="الهدف اليومي (3)"><label>صورة الصفحة (اختياري)<input id="nI" type="file" accept="image/*"></label><button id="addP">إضافة</button></section>
 
-<section data-t="pages" class="card"><h2>الصفحات</h2><div id="pages"></div></section>
+<section data-t="pages" class="card"><h2>الصفحات</h2><div class="bulk" id="pBulk" hidden><b id="pCnt"></b><button class="s" id="pbAct">تفعيل</button><button class="s" id="pbPause">إيقاف</button><button class="s" id="pbArch">أرشفة</button><button class="s" id="pbTgt">الأهداف</button><button class="s x" id="pbDel">حذف نهائي</button>
+<div class="f" id="pbBox" hidden style="width:100%"><input id="pbD" type="number" min="0" placeholder="يومي"><input id="pbW" type="number" min="0" placeholder="أسبوعي"><input id="pbM" type="number" min="0" placeholder="شهري"><button id="pbA">تطبيق</button></div></div>
+<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input id="pAll" type="checkbox"> تحديد الكل</label><div id="pages"></div></section>
+<section data-t="home" class="card wide" id="chCard"><div class="row" style="border:0;padding-top:0"><h2 style="margin:0">معدل النشر اليومي</h2><small id="chS" style="color:var(--mute)"></small></div>
+<svg id="chSvg" viewBox="0 0 320 130" style="width:100%;height:auto"></svg><div class="stats" id="chSum" style="grid-template-columns:repeat(3,1fr);min-width:0;margin-top:8px"></div></section>
 <section data-t="home" class="card"><h2>آخر العمليات</h2><div id="recent"></div></section>
 <section data-t="hist" class="card wide" hidden><h2>سجل النشر</h2><div class="f">
 <select id="hPage"></select><select id="hType"></select><select id="hStat"><option value="">كل الحالات</option><option value="valid">صالحة</option><option value="canceled">ملغاة</option></select>
 <input id="hFrom" type="date"><input id="hTo" type="date"><button id="hGo">بحث</button></div>
-<div style="overflow-x:auto"><table><thead><tr><th>الصفحة</th><th>النوع</th><th>الرقم</th><th>الوقت</th><th></th></tr></thead><tbody id="hRows"></tbody></table></div>
+<div class="bulk" id="hBulk" hidden><b id="hCnt"></b><button class="s x" id="bCx">إلغاء المحدد</button><button class="s" id="bRs2">استعادة المحدد</button><button class="s" id="bEd">تعديل المحدد</button>
+<div class="f" id="bEdBox" hidden style="width:100%"><select id="bEt"></select><input id="bEts" type="datetime-local"><button id="bEA">تطبيق</button></div></div>
+<div style="overflow-x:auto"><table><thead><tr><th><input type="checkbox" id="hAll"></th><th>الصفحة</th><th>النوع</th><th>الرقم</th><th>الوقت</th><th></th></tr></thead><tbody id="hRows"></tbody></table></div>
 <div class="row"><button class="s" id="hPrev">السابق</button><small id="hInfo"></small><button class="s" id="hNext">التالي</button></div></section>
 <section data-t="hist" class="card wide" id="edBox" hidden><h2>تعديل عملية</h2><div class="f"><select id="eType"></select><input id="eTs" type="datetime-local"><input id="eUrl" placeholder="الرابط" dir="ltr"><input id="eDesc" placeholder="الوصف"></div>
 <button id="eSave">حفظ التعديل</button></section>
 <section data-t="badges" class="card wide" hidden><h2>الشارات والإنجازات</h2><div class="bd" id="bdg"></div>
-<h2 style="margin-top:14px">شارة مخصصة</h2><div class="f"><input id="gN" placeholder="الاسم"><input id="gI" placeholder="أيقونة 🎖️" maxlength="4"><input id="gD" placeholder="الوصف">
-<select id="gM"><option value="total">إجمالي العمليات</option><option value="reels">ريلز</option><option value="image">صور</option><option value="story">ستوري</option><option value="video">فيديو</option><option value="post">منشور عادي</option><option value="live">بث مباشر</option><option value="streak">أيام متتالية</option><option value="maxPage">عمليات صفحة واحدة</option></select>
-<input id="gV" type="number" min="1" placeholder="العدد المطلوب"><input id="gP" type="number" min="0" placeholder="النقاط"></div><button id="gAdd">إضافة الشارة</button></section>
+</section>
 <section data-t="set" class="card wide" hidden><h2>لوحة الإدارة</h2><div class="f">
 <label>نقاط المنشور<input id="sP" type="number" min="0"></label><label>مكافأة اليوم<input id="sD" type="number" min="0"></label>
 <label>مكافأة كل الصفحات<input id="sA" type="number" min="0"></label><label>مكافأة الأسبوع<input id="sW" type="number" min="0"></label>
@@ -89,9 +96,16 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px;text-
 <label>اسم المالك<input id="sO"></label><label>الخط<select id="sF"></select></label><label>حجم الخط<input id="sS" type="number" min="12" max="22"></label></div>
 <div class="f" style="margin-top:8px"><label>الأساسي<input id="cNavy" type="color"></label><label>الذهبي<input id="cGold" type="color"></label>
 <label>النجاح<input id="cOk" type="color"></label><label>التقدم<input id="cBlue" type="color"></label></div>
+<div class="f" style="margin:6px 0 8px"><label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input id="uChart" type="checkbox"> إظهار المخطط البياني</label>
+<label>فترة المخطط<select id="uDays"><option value="7">7 أيام</option><option value="14">14 يوماً</option><option value="30">30 يوماً</option></select></label>
+<label>نوع المخطط<select id="uType"><option value="bar">أعمدة</option><option value="line">خط</option></select></label>
+<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input id="uImg" type="checkbox"> إظهار صور الصفحات</label></div>
 <label>المستويات (سطر لكل مستوى: الحد الأدنى|الاسم)<textarea id="sL" rows="6" style="width:100%;font:inherit;padding:8px;border-radius:10px"></textarea></label>
 <button id="sSave">حفظ الإعدادات</button>
-<button id="sReset" style="background:var(--warn)">استعادة الإعدادات الافتراضية (لا تحذف بياناتك)</button></section>
+<button id="sReset" style="background:var(--warn)">استعادة الإعدادات الافتراضية (لا تحذف بياناتك)</button></section><section data-t="set" class="card wide" hidden><h2>إدارة الشارات</h2><small style="color:var(--mute)">فعّل أو عطّل أي شارة وعدّل نقاطها. التغيير يُطبَّق على كل الأجهزة.</small><div id="bdgCfg"></div><button id="bdgSave">حفظ إعدادات الشارات</button>
+<h2 style="margin-top:14px">إضافة شارة مخصصة</h2><div class="f"><input id="gN" placeholder="الاسم"><input id="gI" placeholder="أيقونة 🎖️" maxlength="4"><input id="gD" placeholder="الوصف">
+<select id="gM"><option value="total">إجمالي العمليات</option><option value="reels">ريلز</option><option value="image">صور</option><option value="story">ستوري</option><option value="video">فيديو</option><option value="post">منشور عادي</option><option value="live">بث مباشر</option><option value="streak">أيام متتالية</option><option value="maxPage">عمليات صفحة واحدة</option></select>
+<input id="gV" type="number" min="1" placeholder="العدد المطلوب"><input id="gP" type="number" min="0" placeholder="النقاط"></div><button id="gAdd">إضافة الشارة</button></section>
 <section data-t="ana" class="card wide" hidden><h2>التحليلات (من النشر المسجل فقط، وليست أرقام فيسبوك)</h2><div class="stats" id="aSum"></div>
 <h2 style="margin-top:14px">آخر 14 يوماً</h2><div id="a14"></div><h2 style="margin-top:14px">أنواع النشر</h2><div id="aTypes"></div>
 <h2 style="margin-top:14px">أيام الأسبوع</h2><div id="aWd"></div><h2 style="margin-top:14px">توصيات</h2><div id="aRec"></div></section>
@@ -103,7 +117,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px;text-
 <section data-t="rep" class="card wide" hidden><h2>التقارير</h2><div class="f"><select id="rK"><option value="d">اليوم</option><option value="w">آخر 7 أيام</option><option value="m">هذا الشهر</option><option value="y">هذه السنة</option><option value="a">كل الوقت</option><option value="c">فترة مخصصة</option></select>
 <select id="rP"></select><input id="rF" type="date"><input id="rT" type="date"></div><div style="overflow-x:auto"><table id="rTb"></table></div>
 <div class="f"><button id="rPdf">PDF</button><button id="rXl">Excel</button></div><small>الأرقام من عمليات النشر المسجلة فقط وليست مقاييس فيسبوك.</small></section>
-<section data-t="pages" class="card wide" id="pgEd" hidden><h2>تعديل صفحة</h2><div class="f"><input id="pN" placeholder="الاسم"><input id="pU" placeholder="الرابط" dir="ltr"><input id="pD" type="number" placeholder="يومي"><input id="pW" type="number" placeholder="أسبوعي"><input id="pM" type="number" placeholder="شهري"></div><button id="pS">حفظ</button></section>
+<section data-t="pages" class="card wide" id="pgEd" hidden><h2>تعديل صفحة</h2><div class="f"><input id="pN" placeholder="الاسم"><input id="pU" placeholder="الرابط" dir="ltr"><input id="pD" type="number" placeholder="يومي"><input id="pW" type="number" placeholder="أسبوعي"><input id="pM" type="number" placeholder="شهري"></div><label>صورة الصفحة<input id="pI" type="file" accept="image/*"></label><label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input id="pRm" type="checkbox"> إزالة الصورة الحالية</label><button id="pS">حفظ</button></section>
 </main><button id="fab">＋ سجّل نشر</button>
 <div class="sheet" id="sheet"><div class="panel"><div class="row"><h2 style="margin:0">تسجيل نشر جديد</h2><button class="s" id="shX">✕</button></div>
 <small style="color:var(--mute)">الصفحة</small><div class="chips" id="cPgs"></div><small style="color:var(--mute)">نوع النشر</small><div class="chips" id="cTys"></div>
@@ -178,10 +192,10 @@ window.rs=id=>guard(async()=>{await api('restorePost',id);await hist();await loa
 async function badges(){const b=await api('getBadges');$('bdg').innerHTML=b.map(x=>`<div class="b ${x.unlocked?'u':''}"><span>${x.i}</span><b>${esc(x.n)}</b><br><small>${esc(x.d)}</small><br><small>${x.pts} نقطة${x.date?' · '+x.date:''}</small>${x.custom?`<br><button class="s x" onclick="gx('${x.k}')">حذف</button>`:''}</div>`).join('');}
 async function sets(){const s=await api('getSettings');$('sP').value=s.pointsPerPost;$('sD').value=s.dailyBonus;$('sA').value=s.allDoneBonus;$('sW').value=s.weeklyBonus;$('sM').value=s.monthlyBonus;
  $('sN').value=s.numbering;$('sO').value=s.owner;$('sS').value=s.fontSize;$('sF').innerHTML=s.fonts.map(f=>`<option ${f===s.font?'selected':''}>${esc(f)}</option>`).join('');
- $('cNavy').value=s.navy;$('cGold').value=s.gold;$('cOk').value=s.ok;$('cBlue').value=s.blue;$('sL').value=s.levels.map(l=>l[0]+'|'+l[1]).join('\n');}
+ $('cNavy').value=s.navy;$('cGold').value=s.gold;$('cOk').value=s.ok;$('uChart').checked=s.showChart;$('uDays').value=s.chartDays;$('uType').value=s.chartType;$('uImg').checked=s.showPageImg;$('cBlue').value=s.blue;$('sL').value=s.levels.map(l=>l[0]+'|'+l[1]).join('\n');}
 $('sSave').onclick=()=>guard(async()=>{const L=$('sL').value.split('\n').map(x=>x.trim()).filter(Boolean).map(x=>{const i=x.indexOf('|');return [+x.slice(0,i),x.slice(i+1)];});
  await api('saveSettings',{pointsPerPost:$('sP').value,dailyBonus:$('sD').value,allDoneBonus:$('sA').value,weeklyBonus:$('sW').value,monthlyBonus:$('sM').value,numbering:$('sN').value,owner:$('sO').value,
- font:$('sF').value,fontSize:$('sS').value,navy:$('cNavy').value,gold:$('cGold').value,ok:$('cOk').value,blue:$('cBlue').value,levels:L});await load();toast('تم الحفظ');});
+ font:$('sF').value,fontSize:$('sS').value,navy:$('cNavy').value,gold:$('cGold').value,ok:$('cOk').value,blue:$('cBlue').value,levels:L,showChart:$('uChart').checked,chartDays:$('uDays').value,chartType:$('uType').value,showPageImg:$('uImg').checked});await load();toast('تم الحفظ');});
 $('sReset').onclick=()=>{if(confirm('استعادة الإعدادات الافتراضية؟ بياناتك لن تُحذف.'))guard(async()=>{await api('resetSettings');await sets();toast('تمت الاستعادة');});};
 const bars=(a,max)=>a.map(([l,v])=>`<div class="row"><span style="width:90px">${esc(l)}</span><div class="bar" style="flex:1;margin:0 8px"><i style="width:${max?v/max*100:0}%"></i></div><b>${v}</b></div>`).join('');
 async function ana(){const a=await api('getAnalytics'),m=x=>Math.max(1,...x);
@@ -252,15 +266,15 @@ function renderToday(){const act=D.pages.filter(p=>p.status==='active'),tp=D.tod
  const pc=plan?Math.round(done/plan*100):0;
  $('tlHead').innerHTML=`<div class="row" style="border:0"><b>${done} من ${plan} مهمة</b><span style="color:var(--mute)">${pc}%</span></div><div class="bar"><i style="width:${Math.min(pc,100)}%"></i></div>`;
  const dn=tp.slice().sort((a,b)=>a.time<b.time?-1:1).map(x=>{const p=D.pages.find(g=>g.id===x.pageId)||{name:'-'};
-  return `<div class="tk done"><i class="nd">✓</i><div class="tb"><b>${esc(p.name)}</b><small>${esc(D.types[x.type]||'')} · ${esc(D.today)} ${esc(x.time)}</small></div><button class="s" onclick="undo('${esc(x.id)}')">تراجع</button></div>`;}).join('');
+  return `<div class="tk done"><i class="nd">✓</i>${pimg(p)}<div class="tb"><b>${esc(p.name)}</b><small>${esc(D.types[x.type]||'')} · ${esc(D.today)} ${esc(x.time)}</small></div><button class="s" onclick="undo('${esc(x.id)}')">تراجع</button></div>`;}).join('');
  const pd=pend.map(({p,i})=>{const t=LT[p.id]||'reels';
-  return `<div class="tk"><i class="nd">${i}</i><div class="tb"><b>${esc(p.name)}</b><small>مهمة نشر ${i} من ${p.daily}</small><div class="chips">${Object.entries(D.types).map(([k,v])=>`<button class="chip ${k===t?'on':''}" onclick="pickT('${esc(p.id)}','${k}')">${esc(v)}</button>`).join('')}</div><button class="go2 w" onclick="doneT('${esc(p.id)}')">تم النشر ✓</button></div></div>`;}).join('');
+  return `<div class="tk"><i class="nd">${i}</i>${pimg(p)}<div class="tb"><b>${esc(p.name)}</b><small>مهمة نشر ${i} من ${p.daily}</small><div class="chips">${Object.entries(D.types).map(([k,v])=>`<button class="chip ${k===t?'on':''}" onclick="pickT('${esc(p.id)}','${k}')">${esc(v)}</button>`).join('')}</div><button class="go2 w" onclick="doneT('${esc(p.id)}')">تم النشر ✓</button></div></div>`;}).join('');
  $('tl').innerHTML=(pd?'<h3>المتبقي</h3>'+pd:'')+(dn?'<h3>تم إنجازه</h3>'+dn:'')||'<div class="empty">لا توجد مهام. أضف صفحة وحدد هدفها اليومي من تبويب الصفحات.</div>';}
 window.pickT=(id,k)=>{LT[id]=k;saveLT();renderToday();};
 window.doneT=id=>quickRecord(id,LT[id]||'reels');
 function quickRecord(pageId,type,url,ts){const cid=uid(),t=D.totals,r=D.rows.find(x=>x.id===pageId),same=!ts||ts.slice(0,10)===iso(new Date());LT[pageId]=type;saveLT();
  if(same){(D.todayPosts=D.todayPosts||[]).push({id:'tmp'+cid,pageId,type,time:ts?ts.slice(11,16):new Date().toTimeString().slice(0,5)});
-  t.today++;t.month++;t.life++;D.points+=10;if(r){r.today++;r.total++;r.week=(r.week||0)+1;}render();
+  t.today++;t.month++;t.life++;D.points+=10;if(r){r.today++;r.total++;r.week=(r.week||0)+1;}if(D.chart&&D.chart.series.length)D.chart.series[D.chart.series.length-1].n++;render();
   toast(t.target&&t.today===t.target?'🎉 اكتمل هدف اليوم!':'تم التسجيل ✓');}
  else toast('جارٍ التسجيل بتاريخ '+ts.slice(0,10)+'…');
  return api('recordPost',{pageId,type,url:url||'',ts:ts||'',clientId:cid}).then(()=>{if(!same)toast('تم التسجيل بتاريخ '+ts.slice(0,10)+' ✓');return load();}).catch(e=>{toast(e.message||'فشل التسجيل، حاول مرة أخرى');return load();});}
@@ -274,7 +288,7 @@ function buildChips(){const act=D.pages.filter(p=>p.status==='active');if(!act.f
 $('cPgs').onclick=e=>{const b=e.target.closest('[data-pg]');if(b){$('fPage').value=b.dataset.pg;buildChips();}};
 $('cTys').onclick=e=>{const b=e.target.closest('[data-ty]');if(b){$('fType').value=b.dataset.ty;buildChips();}};
 function render(){const pv=$('fPage').value,tv=$('fType').value;render0();if(pv&&$('fPage').querySelector(`option[value="${pv}"]`))$('fPage').value=pv;if(tv)$('fType').value=tv;
- renderHead();renderToday();buildChips();buildNotes();}
+ renderHead();renderToday();buildChips();renderChart();renderPages();buildNotes();}
 const closeAll=()=>{['sheet','more','nts'].forEach(i=>$(i).classList.remove('open'));};
 $('fab').onclick=()=>{buildChips();$('fTs').value=nowLocal();$('sheet').classList.add('open');};$('shX').onclick=closeAll;
 $('moreB').onclick=()=>$('more').classList.add('open');
@@ -312,6 +326,57 @@ $('nH').onchange=()=>{NT.hour=+$('nH').value;saveNT();buildNotes();};
 $('nT').onclick=()=>sysNotify('عداد النشر','هذا تنبيه تجريبي ✅').then(ok=>toast(ok?'أُرسل التنبيه':'فعّل تنبيه الجهاز أولاً'));
 setInterval(()=>{if(D)buildNotes();},300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&D)buildNotes();});
 function nowLocal(){return new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);}
+
+const SELP=new Set(),SELH=new Set();
+function imgData(f,s){return new Promise((ok,no)=>{if(!f)return ok(undefined);const im=new Image(),r=new FileReader();r.onload=()=>{im.onload=()=>{const c=document.createElement('canvas'),m=Math.min(im.width,im.height);c.width=c.height=s;c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);ok(c.toDataURL('image/jpeg',.72));};im.onerror=()=>no(new Error('تعذر قراءة الصورة'));im.src=r.result;};r.readAsDataURL(f);});}
+function pimg(p){if(D.ui&&D.ui.showPageImg===false)return '';return p.img?`<img class="pimg" src="${esc(p.img)}" alt="">`:`<span class="pimg">${esc((p.name||'?').trim().charAt(0))}</span>`;}
+function renderChart(){const u=D.ui||{},c=$('chCard');c.hidden=u.showChart===false||!D.chart;if(c.hidden)return;
+ const s=D.chart.series,n=s.length,mx=Math.max(3,...s.map(x=>x.n)),W=320,H=130,L=8,R=8,T=14,B=22,pw=(W-L-R)/n,tot=s.reduce((a,x)=>a+x.n,0),avg=tot/n,best=s.reduce((a,x)=>x.n>a.n?x:a,s[0]);
+ const y=v=>T+(H-T-B)*(1-v/mx),cx=i=>(L+pw*i+pw/2).toFixed(1);let g='';
+ [0,.5,1].forEach(f=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(mx*f).toFixed(1)}" y2="${y(mx*f).toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;});
+ if(u.chartType==='line'){g+=`<polyline points="${s.map((x,i)=>cx(i)+','+y(x.n).toFixed(1)).join(' ')}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`+s.map((x,i)=>`<circle cx="${cx(i)}" cy="${y(x.n).toFixed(1)}" r="3" fill="var(--gold)"/>`).join('');}
+ else g+=s.map((x,i)=>`<rect x="${(L+pw*i+pw*.18).toFixed(1)}" y="${y(x.n).toFixed(1)}" width="${(pw*.64).toFixed(1)}" height="${Math.max(1.5,H-B-y(x.n)).toFixed(1)}" rx="3" fill="${i===n-1?'var(--gold)':'var(--blue)'}" opacity="${x.n?1:.25}"/>`).join('');
+ g+=`<line x1="${L}" x2="${W-R}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}" stroke="var(--ok)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+ const st=n>14?5:n>7?2:1;g+=s.map((x,i)=>(i%st===0||i===n-1)?`<text x="${cx(i)}" y="${H-6}" text-anchor="middle" font-size="8" fill="var(--mute)">${esc(x.d)}</text>`:'').join('');
+ $('chSvg').innerHTML=g;$('chS').textContent='آخر '+n+' يوماً';
+ $('chSum').innerHTML=`<div class="stat"><b>${avg.toFixed(1)}</b>المتوسط اليومي</div><div class="stat"><b>${best.n}</b>أعلى يوم (${esc(best.d)})</div><div class="stat"><b>${tot}</b>الإجمالي</div>`;}
+function renderPages(){const st={active:'نشطة',paused:'متوقفة',archived:'مؤرشفة'};
+ $('pages').innerHTML=D.pages.map(x=>{const r=D.rows.find(y=>y.id===x.id),pc=r&&r.daily?Math.min(100,r.today/r.daily*100):0;
+  return `<div class="row"><input type="checkbox" data-pid="${esc(x.id)}" ${SELP.has(x.id)?'checked':''}>${pimg(x)}<div style="flex:1;min-width:0"><b>${esc(x.name)}</b> <small style="color:var(--mute)">${st[x.status]}${r?' · اليوم '+r.today+'/'+r.daily:''}</small>${r?`<div class="bar"><i style="width:${pc}%"></i></div>`:''}</div><button class="s" onclick="ep('${esc(x.id)}')">تعديل</button></div>`;}).join('')||'<small>أضف صفحتك الأولى للبدء.</small>';
+ [...SELP].forEach(i=>{if(!D.pages.find(p=>p.id===i))SELP.delete(i);});updPBulk();}
+function updPBulk(){const n=SELP.size;$('pBulk').hidden=!n;$('pCnt').textContent='المحدد: '+n;$('pAll').checked=!!n&&n===D.pages.length;}
+$('pages').onchange=e=>{const c=e.target.closest('[data-pid]');if(!c)return;c.checked?SELP.add(c.dataset.pid):SELP.delete(c.dataset.pid);updPBulk();};
+$('pAll').onchange=()=>{SELP.clear();if($('pAll').checked)D.pages.forEach(p=>SELP.add(p.id));renderPages();};
+const bp=(a,d,msg)=>guard(async()=>{const r=await api('bulkPages',a,[...SELP],d||{});SELP.clear();await load();toast(msg+' ('+r.n+')');});
+$('pbAct').onclick=()=>bp('status',{status:'active'},'تم التفعيل');$('pbPause').onclick=()=>bp('status',{status:'paused'},'تم الإيقاف');
+$('pbArch').onclick=()=>{if(confirm('أرشفة الصفحات المحددة؟ التاريخ يبقى محفوظاً.'))bp('status',{status:'archived'},'تمت الأرشفة');};
+$('pbTgt').onclick=()=>{$('pbBox').hidden=!$('pbBox').hidden;};
+$('pbA').onclick=()=>{bp('targets',{daily:$('pbD').value,weekly:$('pbW').value,monthly:$('pbM').value},'تم تعديل الأهداف');$('pbBox').hidden=true;};
+$('pbDel').onclick=()=>{const t=prompt('حذف نهائي لصفحات مؤرشفة مع كل عملياتها ونقاطها (بنسخة أمان تلقائية).\nاكتب كلمة: حذف');if(t)bp('delete',{confirm:t.trim()},'تم الحذف');};
+async function hist(){if(!D)await load();if(!$('hPage').options.length)fill();
+ const f={pageId:$('hPage').value,type:$('hType').value,status:$('hStat').value,from:$('hFrom').value,to:$('hTo').value,page:H.page};
+ const r=await api('getHistory',f);H=r;window._rows=r.rows;
+ $('hRows').innerHTML=r.rows.map(x=>`<tr class="${x.status==='canceled'?'c':''}"><td><input type="checkbox" data-hid="${esc(x.id)}" ${SELH.has(x.id)?'checked':''}></td><td>${esc(x.page)}</td><td>${esc(x.typeAr)}</td><td>${x.seq}</td><td>${esc(x.ts.replace('T',' '))}</td><td><button class="s" onclick="ed('${esc(x.id)}')">تعديل</button></td></tr>`).join('')||'<tr><td colspan="6">لا توجد نتائج.</td></tr>';
+ $('hInfo').textContent=`${r.page} / ${r.pages} · ${r.total} عملية`;updHBulk();}
+function updHBulk(){const n=SELH.size,ids=(window._rows||[]).map(x=>x.id);$('hBulk').hidden=!n;$('hCnt').textContent='المحدد: '+n;$('hAll').checked=!!ids.length&&ids.every(i=>SELH.has(i));}
+$('hRows').onchange=e=>{const c=e.target.closest('[data-hid]');if(!c)return;c.checked?SELH.add(c.dataset.hid):SELH.delete(c.dataset.hid);updHBulk();};
+$('hAll').onchange=()=>{(window._rows||[]).forEach(x=>$('hAll').checked?SELH.add(x.id):SELH.delete(x.id));guard(hist);};
+const bh=(a,d,msg)=>guard(async()=>{const r=await api('bulkPosts',a,[...SELH],d||{});SELH.clear();$('bEdBox').hidden=true;await hist();await load();toast(msg+' ('+r.n+')');});
+$('bCx').onclick=()=>{if(confirm('إلغاء العمليات المحددة وعكس نقاطها؟'))bh('cancel',{},'تم الإلغاء');};
+$('bRs2').onclick=()=>bh('restore',{},'تمت الاستعادة');
+$('bEd').onclick=()=>{$('bEt').innerHTML='<option value="">النوع: بدون تغيير</option>'+Object.entries(D.types).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');$('bEdBox').hidden=!$('bEdBox').hidden;};
+$('bEA').onclick=()=>{if(!$('bEt').value&&!$('bEts').value)return toast('اختر نوعاً أو تاريخاً');bh('edit',{type:$('bEt').value,ts:$('bEts').value},'تم التعديل');};
+$('addP').onclick=()=>guard(async()=>{const img=await imgData($('nI').files[0],96);await api('addPage',{name:$('nName').value,url:$('nUrl').value,daily:$('nDaily').value||3,img:img});
+ $('nName').value=$('nUrl').value=$('nDaily').value='';$('nI').value='';await load();toast('أضيفت الصفحة');});
+$('pS').onclick=()=>guard(async()=>{const o={name:$('pN').value,url:$('pU').value,daily:$('pD').value,weekly:$('pW').value,monthly:$('pM').value};
+ if($('pRm').checked)o.img='';else{const im=await imgData($('pI').files[0],96);if(im)o.img=im;}
+ await api('editPage',PID,o);$('pgEd').hidden=true;$('pI').value='';$('pRm').checked=false;await load();toast('تم تعديل الصفحة');});
+async function bdgAdmin(){const b=await api('getBadgeAdmin');$('bdgCfg').innerHTML=b.map(x=>`<div class="row"><input type="checkbox" data-bk="${esc(x.k)}" ${x.off?'':'checked'}><span style="font-size:24px">${esc(x.i)}</span><div style="flex:1;min-width:0"><b>${esc(x.n)}</b><br><small style="color:var(--mute)">${esc(x.d)}</small></div><input type="number" min="0" data-bp="${esc(x.k)}" value="${x.pts}" style="width:84px;margin:0">${x.custom?`<button class="s x" onclick="gdel('${esc(x.k)}')">حذف</button>`:''}</div>`).join('');}
+$('bdgSave').onclick=()=>guard(async()=>{const cfg={};document.querySelectorAll('[data-bk]').forEach(c=>{cfg[c.dataset.bk]={off:!c.checked,pts:+document.querySelector('[data-bp="'+c.dataset.bk+'"]').value};});await api('saveBadgeCfg',cfg);await load();toast('تم حفظ إعدادات الشارات');});
+window.gdel=k=>{if(confirm('حذف الشارة المخصصة وسحب نقاطها؟'))guard(async()=>{await api('deleteBadge',k);await bdgAdmin();await load();toast('تم الحذف');});};
+$('gAdd').onclick=()=>guard(async()=>{await api('addBadge',{n:$('gN').value,i:$('gI').value,d:$('gD').value,m:$('gM').value,v:$('gV').value,pts:$('gP').value||0});['gN','gI','gD','gV','gP'].forEach(i=>$(i).value='');await bdgAdmin();await load();toast('أضيفت الشارة');});
+const _g5=go;go=function(t){_g5(t);if(t==='set')guard(bdgAdmin);};
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 async function boot(){try{await load();}catch(e){if(!D){const b=$('err');b.hidden=false;b.innerHTML='<b>تعذر تحميل البيانات</b><br><small>'+esc(e.message||String(e))+'</small><br><br><button id="rt">إعادة المحاولة</button>';$('rt').onclick=boot;}else toast('تعذر التحديث');}}
 try{const c=JSON.parse(localStorage.getItem('pc_cache')||'null');if(c&&c.today===iso(new Date())){D=c;render();}}catch(e){D=null;}
 boot();
