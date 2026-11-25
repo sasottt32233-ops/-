@@ -75,6 +75,7 @@ input[type=checkbox]{width:20px;height:20px;margin:0;accent-color:var(--gold);fl
 <section data-t="pages" class="card"><h2>الصفحات</h2><div class="bulk" id="pBulk" hidden><b id="pCnt"></b><button class="s" id="pbAct">تفعيل</button><button class="s" id="pbPause">إيقاف</button><button class="s" id="pbArch">أرشفة</button><button class="s" id="pbTgt">الأهداف</button><button class="s x" id="pbDel">حذف نهائي</button>
 <div class="f" id="pbBox" hidden style="width:100%"><input id="pbD" type="number" min="0" placeholder="يومي"><input id="pbW" type="number" min="0" placeholder="أسبوعي"><input id="pbM" type="number" min="0" placeholder="شهري"><button id="pbA">تطبيق</button></div></div>
 <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input id="pAll" type="checkbox"> تحديد الكل</label><div id="pages"></div></section>
+<section data-t="home" class="card wide" id="pgCard"><div class="row" style="border:0;padding-top:0"><h2 style="margin:0">الصفحات وتقدّمها</h2><small id="pgS" style="color:var(--mute)"></small></div><div id="pgProg"></div></section>
 <section data-t="home" class="card wide" id="chCard"><div class="row" style="border:0;padding-top:0"><h2 style="margin:0">معدل النشر اليومي</h2><small id="chS" style="color:var(--mute)"></small></div>
 <svg id="chSvg" viewBox="0 0 320 130" style="width:100%;height:auto"></svg><div class="stats" id="chSum" style="grid-template-columns:repeat(3,1fr);min-width:0;margin-top:8px"></div></section>
 <section data-t="home" class="card"><h2>آخر العمليات</h2><div id="recent"></div></section>
@@ -288,7 +289,7 @@ function buildChips(){const act=D.pages.filter(p=>p.status==='active');if(!act.f
 $('cPgs').onclick=e=>{const b=e.target.closest('[data-pg]');if(b){$('fPage').value=b.dataset.pg;buildChips();}};
 $('cTys').onclick=e=>{const b=e.target.closest('[data-ty]');if(b){$('fType').value=b.dataset.ty;buildChips();}};
 function render(){const pv=$('fPage').value,tv=$('fType').value;render0();if(pv&&$('fPage').querySelector(`option[value="${pv}"]`))$('fPage').value=pv;if(tv)$('fType').value=tv;
- renderHead();renderToday();buildChips();renderChart();renderPages();buildNotes();}
+ renderHead();renderToday();buildChips();renderChart();renderPgProg();renderPages();buildNotes();}
 const closeAll=()=>{['sheet','more','nts'].forEach(i=>$(i).classList.remove('open'));};
 $('fab').onclick=()=>{buildChips();$('fTs').value=nowLocal();$('sheet').classList.add('open');};$('shX').onclick=closeAll;
 $('moreB').onclick=()=>$('more').classList.add('open');
@@ -377,6 +378,12 @@ window.gdel=k=>{if(confirm('حذف الشارة المخصصة وسحب نقاط
 $('gAdd').onclick=()=>guard(async()=>{await api('addBadge',{n:$('gN').value,i:$('gI').value,d:$('gD').value,m:$('gM').value,v:$('gV').value,pts:$('gP').value||0});['gN','gI','gD','gV','gP'].forEach(i=>$(i).value='');await bdgAdmin();await load();toast('أضيفت الشارة');});
 const _g5=go;go=function(t){_g5(t);if(t==='set')guard(bdgAdmin);};
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+function renderPgProg(){const rows=D.rows||[];$('pgS').textContent=rows.length?rows.length+' صفحة نشطة':'';
+ $('pgProg').innerHTML=rows.map(r=>{const p=D.pages.find(x=>x.id===r.id)||{name:r.name},d=r.daily>0?Math.round(r.today/r.daily*100):0,w=r.weekly>0?Math.round((r.week||0)/r.weekly*100):0;
+  return `<div class="row" style="cursor:pointer" onclick="go('today')">${pimg(p)}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(r.name)}</b><span style="color:${d>=100?'var(--ok)':'var(--mute)'};font-size:13px">${d>=100?'✓ ':''}اليوم ${r.today}/${r.daily}</span></div>
+  <div class="bar"><i style="width:${Math.min(d,100)}%;background:${colour(d)}"></i></div>
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-top:4px"><span>الأسبوع ${r.week||0}/${r.weekly||0}</span><span>${Math.min(w,999)}%</span></div><div class="bar" style="height:4px"><i style="width:${Math.min(w,100)}%;opacity:.7"></i></div></div></div>`;}).join('')||'<div class="empty">لا توجد صفحات نشطة. أضف صفحة من تبويب الصفحات.</div>';}
 async function boot(){try{await load();}catch(e){if(!D){const b=$('err');b.hidden=false;b.innerHTML='<b>تعذر تحميل البيانات</b><br><small>'+esc(e.message||String(e))+'</small><br><br><button id="rt">إعادة المحاولة</button>';$('rt').onclick=boot;}else toast('تعذر التحديث');}}
 try{const c=JSON.parse(localStorage.getItem('pc_cache')||'null');if(c&&c.today===iso(new Date())){D=c;render();}}catch(e){D=null;}
 boot();
